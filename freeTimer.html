@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<p id="mostrador1"></p>
+<p id="mostrador2"></p>
+<button id="boton1" onclick="temporiza();"/>
+<script id="idPepe" type="text/trabajador">
+	var cuenta = -1;
+	const canalContador = new MessageChannel();
+
+	self.onmessage = function(evento){//llamado desde worker.postMessage(...	
+		if(evento.data==1){//paso7			
+			canalContador.port1.postMessage(0);						
+		}
+		else{//paso2 configura cuenta
+			cuenta = 0;
+			canalContador.port1.onmessage = function(eventoCuenta){//paralelo paso4		
+				//console.log(cuenta);
+				cuenta++;
+				canalContador.port2.postMessage(0);//paralelo paso5 bucle infinito
+			};
+			canalContador.port2.onmessage = function(eventoCuenta){//paso8
+				self.postMessage(cuenta);
+			}			
+			canalContador.port2.postMessage(0);//paralelo paso3	
+		}
+	};
+</script>
+<script type="text/javascript">
+	var mostrador1 = document.getElementById("mostrador1");
+	var mostrador2 = document.getElementById("mostrador2");
+	var boton1 = document.getElementById("boton1");
+	//30us de resolucion del temporizador
+	var objetoBlob = new Blob([document.querySelector('#idPepe').textContent], { type: "text/javascript" });
+	//var blob = new Blob(Array.prototype.map.call(document.querySelectorAll("script[type=\"text\/js-worker\"]"), function (oScript) { return oScript.textContent; }),{type: "text/javascript"});
+	var trabajadorPepe = new Worker(URL.createObjectURL(objetoBlob));
+	
+	mostrador1.innerHTML="hola";
+	function escuchaMensajes(e){//paso9
+		mostrador1.innerHTML=e.data;//el minimo es 201
+		boton1.disabled = true;
+	}
+	trabajadorPepe.onmessage=escuchaMensajes;
+	
+	function temporiza(){
+		trabajadorPepe.postMessage(0);//paso1 inicia bucle infinito cuenta en paralelo
+		for(var i=0;i<17000;i++){
+		//5000000 iteraciones son cuenta=603,
+		//500000 iteraciones son cuenta=402(18000 tambien),
+		//15000 son cuenta=201
+		}//1 iteration equals 10 CPU clock cycles 
+		//asi que mide 201 muestras en 170mil instrucciones, en este ordenador de 3.6GHz son 47.2ms=170000/3600000
+		//tiene una resolucion 47.2/201=235us
+		//necesitamos que sea de 23.5us, es decir, 10 veces mas preciso
+		trabajadorPepe.postMessage(1);//paso6 manda parar bucle infinito y lee cuenta
+	}	
+</script>
+</body>
+</html>
