@@ -10,7 +10,7 @@
 	var cuenta = -1;
 	const canalContador = new MessageChannel();
 
-	self.onmessage = function(evento){//llamado desde worker.postMessage(...	
+	self.onmessage = function(evento){//llamado desde trabajadorPepe.postMessage(...	
 		if(evento.data==1){//paso7			
 			canalContador.port1.postMessage(0);						
 		}
@@ -32,7 +32,7 @@
 	var mostrador1 = document.getElementById("mostrador1");
 	var mostrador2 = document.getElementById("mostrador2");
 	var boton1 = document.getElementById("boton1");
-	//30us de resolucion del temporizador
+	//se espera conseguir 30us aprox de resolucion del temporizador con un i5
 	var objetoBlob = new Blob([document.querySelector('#idPepe').textContent], { type: "text/javascript" });
 	//var blob = new Blob(Array.prototype.map.call(document.querySelectorAll("script[type=\"text\/js-worker\"]"), function (oScript) { return oScript.textContent; }),{type: "text/javascript"});
 	var trabajadorPepe = new Worker(URL.createObjectURL(objetoBlob));
@@ -44,6 +44,9 @@
 	}
 	trabajadorPepe.onmessage=escuchaMensajes;
 	
+	//al pulsar el boton crea un hilo en paralelo que mide en unidades arbitrarias los ciclos que tarda en realizar un bucle
+	//de X instrucciones (modificar numero) no menor a 170000
+	//para calcular los ciclos usar formula: numCiclos = (devuelto-201)*(170000/201)
 	function temporiza(){
 		trabajadorPepe.postMessage(0);//paso1 inicia bucle infinito cuenta en paralelo
 		for(var i=0;i<17000;i++){
@@ -54,7 +57,7 @@
 		//asi que mide 201 muestras en 170mil instrucciones, en este ordenador de 3.6GHz son 47.2ms=170000/3600000
 		//tiene una resolucion 47.2/201=235us
 		//necesitamos que sea de 23.5us, es decir, 10 veces mas preciso
-		trabajadorPepe.postMessage(1);//paso6 manda parar bucle infinito y lee cuenta
+		trabajadorPepe.postMessage(1);//paso6 lee cuenta
 	}	
 </script>
 </body>
